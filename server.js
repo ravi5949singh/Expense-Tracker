@@ -9,8 +9,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-app.use('/uploads', express.static(path.join(__dirname, "public/uploads")));
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/expenseDB")
@@ -30,9 +29,9 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/ai", aiRoutes);
 
-// Catch-all to serve index.html for SPA
-app.use((req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+// Removed catch-all to serve index.html since frontend is now separate
+app.get('/', (req, res) => {
+    res.send('Expense Tracker API is running!');
 });
 
 const PORT = process.env.PORT || 3000;
