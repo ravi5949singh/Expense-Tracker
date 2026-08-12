@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use('/uploads', express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/expenseDB")
+mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ExpenseTracker")
 .then(() => console.log("MongoDB Connected ✅"))
 .catch(err => console.log("Error:", err));
 
