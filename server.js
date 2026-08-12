@@ -9,6 +9,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 app.use('/uploads', express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
@@ -29,9 +30,9 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/ai", aiRoutes);
 
-// Removed catch-all to serve index.html since frontend is now separate
-app.get('/', (req, res) => {
-    res.send('Expense Tracker API is running!');
+// Serve frontend index.html for non-API routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
