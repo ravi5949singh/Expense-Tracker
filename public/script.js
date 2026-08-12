@@ -27,10 +27,9 @@ if(generateSummaryBtn) {
 // ===============================
 // API CONFIGURATION
 // ===============================
-// When deploying to Netlify, change the production URL below to your Render backend URL
 const BASE_URL = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? "http://localhost:3000"
-    : window.location.origin;
+    : "https://expense-tracker-api-ra6v.onrender.com";
 
 // ===============================
 // DOM ELEMENTS
