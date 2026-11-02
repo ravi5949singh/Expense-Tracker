@@ -56,23 +56,28 @@ const mongooseOptions = {
     w: "majority"
 };
 
-const connectWithRetry = (retries = 5) => {
+const connectWithRetry = (retries = 10) => {
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) return;
     mongoose.connect(MONGO_URI, mongooseOptions)
         .then(() => {
             console.log("MongoDB Connected ✅");
             console.log("Connected to:", maskedUri);
         })
         .catch(err => {
-            console.error(`MongoDB Connection Error ❌ (attempt ${6 - retries}/5):`, err.message);
-            console.error("Failed target was:", maskedUri);
+            console.error(`MongoDB Connection Error ❌ (retries left: ${retries}):`, err.message);
             if (retries > 0) {
-                console.log(`Retrying in 5 seconds... (${retries - 1} retries left)`);
+                console.log("Retrying MongoDB connection in 5 seconds...");
                 setTimeout(() => connectWithRetry(retries - 1), 5000);
             } else {
-                console.error("❌ All MongoDB connection attempts failed. Running without DB.");
+                console.error("❌ MongoDB connection failed. Will retry on next request.");
             }
         });
 };
+
+mongoose.connection.on("disconnected", () => {
+    console.log("MongoDB disconnected! Reconnecting in 5s...");
+    setTimeout(() => connectWithRetry(5), 5000);
+});
 
 connectWithRetry();
 
@@ -95,8 +100,11 @@ app.use("/api/ai", aiRoutes);
 app.get("/api/health", (req, res) => {
     const states = ["disconnected", "connected", "connecting", "disconnecting"];
     const state = mongoose.connection.readyState;
+    if (state === 0) {
+        connectWithRetry(3);
+    }
     res.json({
-        status: state === 1 ? "healthy" : "degraded",
+        status: state === 1 ? "healthy" : "reconnecting",
         database: states[state] || "unknown",
         readyState: state,
         timestamp: new Date().toISOString()
