@@ -45,6 +45,10 @@ app.use("/uploads", express.static(uploadsDir));
 // ============================
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ExpenseTracker";
 
+// Safe masked URL for debugging without exposing password
+const maskedUri = MONGO_URI.replace(/:([^:@]+)@/, ":****@");
+console.log("🔗 MongoDB target URI:", maskedUri);
+
 const mongooseOptions = {
     serverSelectionTimeoutMS: 15000,   // Wait 15s before failing
     socketTimeoutMS: 45000,            // Close sockets after 45s of inactivity
@@ -56,10 +60,11 @@ const connectWithRetry = (retries = 5) => {
     mongoose.connect(MONGO_URI, mongooseOptions)
         .then(() => {
             console.log("MongoDB Connected ✅");
-            console.log("Connected to:", MONGO_URI.split("@").pop() || "local"); // Log host, not password
+            console.log("Connected to:", maskedUri);
         })
         .catch(err => {
             console.error(`MongoDB Connection Error ❌ (attempt ${6 - retries}/5):`, err.message);
+            console.error("Failed target was:", maskedUri);
             if (retries > 0) {
                 console.log(`Retrying in 5 seconds... (${retries - 1} retries left)`);
                 setTimeout(() => connectWithRetry(retries - 1), 5000);
