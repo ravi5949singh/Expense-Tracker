@@ -91,6 +91,18 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/goals", goalRoutes);
 app.use("/api/ai", aiRoutes);
 
+// Health check endpoint with DB status
+app.get("/api/health", (req, res) => {
+    const states = ["disconnected", "connected", "connecting", "disconnecting"];
+    const state = mongoose.connection.readyState;
+    res.json({
+        status: state === 1 ? "healthy" : "degraded",
+        database: states[state] || "unknown",
+        readyState: state,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // ============================
 // Serve Frontend (SPA Fallback)
 // ============================
