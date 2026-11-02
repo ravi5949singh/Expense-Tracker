@@ -4,6 +4,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const dns = require("dns");
+
+// Use reliable Google/Cloudflare DNS for MongoDB SRV resolution
+try {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (e) {
+    console.warn("Could not set custom DNS servers:", e.message);
+}
 
 const app = express();
 
@@ -38,9 +46,8 @@ app.use("/uploads", express.static(uploadsDir));
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ExpenseTracker";
 
 const mongooseOptions = {
-    serverSelectionTimeoutMS: 10000,   // Wait 10s before failing
+    serverSelectionTimeoutMS: 15000,   // Wait 15s before failing
     socketTimeoutMS: 45000,            // Close sockets after 45s of inactivity
-    family: 4,                         // Force IPv4 — fixes DNS SRV issues on Render
     retryWrites: true,
     w: "majority"
 };
