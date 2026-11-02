@@ -27,6 +27,8 @@ if(generateSummaryBtn) {
 // ===============================
 // API CONFIGURATION
 // ===============================
+// API CONFIGURATION
+// ===============================
 const BASE_URL = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? "http://localhost:3000"
     : "https://expense-tracker-api-ra6v.onrender.com";
@@ -151,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initVanta();
     initNav();
     initAuth();
+    initNotifications();
     
     const token = localStorage.getItem('expense-token');
     if(token) {
@@ -887,4 +890,131 @@ function getMonthName(dateStr) {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthIndex = parseInt(dateStr.split('-')[1], 10) - 1;
     return months[monthIndex];
+}
+
+// ===============================
+// NOTIFICATIONS SYSTEM
+// ===============================
+const defaultNotifications = [
+    {
+        id: 1,
+        title: "Budget Alert",
+        message: "You've spent 68% of your monthly budget. Slow down on dining out to stay on track!",
+        time: "10m ago",
+        icon: "bx-wallet",
+        iconBg: "rgba(245, 158, 11, 0.15)",
+        iconColor: "#f59e0b",
+        unread: true
+    },
+    {
+        id: 2,
+        title: "AI Financial Insight",
+        message: "Gemini analyzed your spending: You can save ₹1,800/mo by cutting down recurring subscriptions.",
+        time: "2h ago",
+        icon: "bx-bot",
+        iconBg: "rgba(99, 102, 241, 0.15)",
+        iconColor: "#6366f1",
+        unread: true
+    },
+    {
+        id: 3,
+        title: "Goal Milestone Reached",
+        message: "Great progress! Your 'Emergency Savings Fund' is now 40% completed.",
+        time: "1d ago",
+        icon: "bx-target-lock",
+        iconBg: "rgba(16, 185, 129, 0.15)",
+        iconColor: "#10b981",
+        unread: true
+    },
+    {
+        id: 4,
+        title: "Cloud Sync Active",
+        message: "All your data is securely synced to MongoDB Atlas and live on Render.",
+        time: "2d ago",
+        icon: "bx-cloud-upload",
+        iconBg: "rgba(59, 130, 246, 0.15)",
+        iconColor: "#3b82f6",
+        unread: false
+    }
+];
+
+function initNotifications() {
+    const notifBtn = document.getElementById('notif-btn');
+    const notifDropdown = document.getElementById('notif-dropdown');
+    const notifList = document.getElementById('notif-list');
+    const notifBadge = document.getElementById('notif-badge');
+    const notifCountText = document.getElementById('notif-count-text');
+    const markAllReadBtn = document.getElementById('mark-all-read');
+
+    if (!notifBtn || !notifDropdown || !notifList) return;
+
+    let notifications = JSON.parse(localStorage.getItem('user_notifications')) || defaultNotifications;
+
+    function renderNotifications() {
+        const unreadCount = notifications.filter(n => n.unread).length;
+        if (notifBadge) {
+            notifBadge.innerText = unreadCount;
+            notifBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        if (notifCountText) {
+            notifCountText.innerText = unreadCount > 0 
+                ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
+                : "All caught up! 🎉";
+        }
+
+        notifList.innerHTML = notifications.map(n => `
+            <div class="notif-item ${n.unread ? 'unread' : ''}" data-id="${n.id}">
+                <div class="notif-icon" style="background:${n.iconBg}; color:${n.iconColor}">
+                    <i class='bx ${n.icon}'></i>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title-row">
+                        <span class="notif-item-title">${n.title}</span>
+                        <span class="notif-time">${n.time}</span>
+                    </div>
+                    <p class="notif-text">${n.message}</p>
+                </div>
+                ${n.unread ? '<div class="notif-dot"></div>' : ''}
+            </div>
+        `).join('');
+
+        // Attach click listeners to individual notification items to mark read
+        notifList.querySelectorAll('.notif-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = parseInt(el.getAttribute('data-id'), 10);
+                const target = notifications.find(n => n.id === id);
+                if (target && target.unread) {
+                    target.unread = false;
+                    localStorage.setItem('user_notifications', JSON.stringify(notifications));
+                    renderNotifications();
+                }
+            });
+        });
+    }
+
+    renderNotifications();
+
+    // Toggle dropdown on button click
+    notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle('hidden');
+    });
+
+    // Mark all as read button
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifications.forEach(n => n.unread = false);
+            localStorage.setItem('user_notifications', JSON.stringify(notifications));
+            renderNotifications();
+            showToast("All notifications marked as read! ✓");
+        });
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifDropdown.classList.add('hidden');
+        }
+    });
 }

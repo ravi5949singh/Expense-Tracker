@@ -59,7 +59,24 @@
                 </div>
 
                 <div class="header-right">
-                    <button class="icon-btn"><i class='bx bx-bell'></i><span class="badge">3</span></button>
+                    <div class="notif-wrapper">
+                        <button class="icon-btn" id="notif-btn" title="Notifications">
+                            <i class='bx bx-bell'></i>
+                            <span class="badge" id="notif-badge">3</span>
+                        </button>
+                        <div id="notif-dropdown" class="notif-dropdown hidden">
+                            <div class="notif-header">
+                                <h4>Notifications</h4>
+                                <button id="mark-all-read" class="notif-action-btn">Mark all read</button>
+                            </div>
+                            <div class="notif-list" id="notif-list">
+                                <!-- Populated by script.js -->
+                            </div>
+                            <div class="notif-footer">
+                                <span id="notif-count-text">3 unread notifications</span>
+                            </div>
+                        </div>
+                    </div>
                     <button class="icon-btn" id="theme-toggle"><i class='bx bx-moon'></i></button>
                     <div class="header-avatar">RS</div>
                 </div>
