@@ -37,11 +37,32 @@ app.use("/uploads", express.static(uploadsDir));
 // ============================
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ExpenseTracker";
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log("MongoDB Connected ✅"))
-    .catch(err => {
-        console.error("MongoDB Connection Error ❌:", err.message);
-    });
+const mongooseOptions = {
+    serverSelectionTimeoutMS: 10000,   // Wait 10s before failing
+    socketTimeoutMS: 45000,            // Close sockets after 45s of inactivity
+    family: 4,                         // Force IPv4 — fixes DNS SRV issues on Render
+    retryWrites: true,
+    w: "majority"
+};
+
+const connectWithRetry = (retries = 5) => {
+    mongoose.connect(MONGO_URI, mongooseOptions)
+        .then(() => {
+            console.log("MongoDB Connected ✅");
+            console.log("Connected to:", MONGO_URI.split("@").pop() || "local"); // Log host, not password
+        })
+        .catch(err => {
+            console.error(`MongoDB Connection Error ❌ (attempt ${6 - retries}/5):`, err.message);
+            if (retries > 0) {
+                console.log(`Retrying in 5 seconds... (${retries - 1} retries left)`);
+                setTimeout(() => connectWithRetry(retries - 1), 5000);
+            } else {
+                console.error("❌ All MongoDB connection attempts failed. Running without DB.");
+            }
+        });
+};
+
+connectWithRetry();
 
 // ============================
 // API Routes
